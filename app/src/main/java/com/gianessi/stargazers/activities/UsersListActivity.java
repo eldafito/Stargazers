@@ -1,19 +1,27 @@
 package com.gianessi.stargazers.activities;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.SearchView;
 
 import com.gianessi.stargazers.R;
 import com.gianessi.stargazers.adapters.UsersAdapter;
+import com.gianessi.stargazers.listeners.OnUserSelectedListener;
 import com.gianessi.stargazers.models.User;
 import com.gianessi.stargazers.models.UsersResponse;
 import com.gianessi.stargazers.network.NetworkManager;
@@ -26,7 +34,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 
-public class UsersListActivity extends AppCompatActivity {
+public class UsersListActivity extends AppCompatActivity implements OnUserSelectedListener {
 
     private static final String TAG = "UsersListActivity";
     private static final int MAX_ITEMS = 30;
@@ -53,14 +61,38 @@ public class UsersListActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        this.adapter.setListener(this);
+    }
+
+    @Override
+    protected void onStop() {
+        this.adapter.removeListener();
+        super.onStop();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.users_list, menu);
 
         SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
         searchView.setOnQueryTextListener(new UsersQueryTextListener());
+        searchView.setIconifiedByDefault(false);
 
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+        // Focus on startup
+        MenuItem searchItem = menu.findItem(R.id.search);
+        searchItem.getActionView().requestFocus();
+        searchItem.expandActionView();
+
+        return super.onPrepareOptionsMenu(menu);
     }
 
     public void requestUsers(String query) {
@@ -80,7 +112,14 @@ public class UsersListActivity extends AppCompatActivity {
     public void addUsers(List<User> users) {
         this.users.addAll(users);
         this.adapter.notifyItemRangeInserted(this.users.size() - users.size(), users.size());
-        Log.i(TAG, String.format("%d utenti", this.users.size()));
+    }
+
+    @Override
+    public void onUserSelected(User user) {
+        Intent intent = new Intent();
+        intent.putExtra(User.USERNAME, user.getUsername());
+        setResult(Activity.RESULT_OK, intent);
+        finish();
     }
 
     private class UsersQueryTextListener implements SearchView.OnQueryTextListener{
@@ -152,5 +191,6 @@ public class UsersListActivity extends AppCompatActivity {
             UsersListActivity.this.requestUsers(query);
         }
     }
+
 
 }
