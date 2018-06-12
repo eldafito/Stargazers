@@ -6,8 +6,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.gianessi.stargazers.R;
 import com.gianessi.stargazers.listeners.OnUserSelectedListener;
 import com.gianessi.stargazers.models.User;
@@ -75,13 +78,18 @@ public class UsersAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     }
 
     private static class UserViewHolder extends RecyclerView.ViewHolder {
+
         private TextView usernameTxt;
+        private ImageView avatarImg;
+
         private UserViewHolder(View view) {
             super(view);
             usernameTxt = view.findViewById(R.id.user_username_txt);
+            avatarImg = view.findViewById(R.id.user_avatar_img);
         }
 
         private void bind(User user){
+            Glide.with(this.itemView.getContext()).load(user.getAvatarUrl()).apply(RequestOptions.circleCropTransform()).into(avatarImg);
             this.usernameTxt.setText(user.getUsername());
         }
     }
