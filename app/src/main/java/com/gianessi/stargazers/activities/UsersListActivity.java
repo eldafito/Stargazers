@@ -1,22 +1,18 @@
 package com.gianessi.stargazers.activities;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View;
 import android.widget.SearchView;
 
 import com.gianessi.stargazers.R;
@@ -37,14 +33,17 @@ import retrofit2.Response;
 public class UsersListActivity extends AppCompatActivity implements OnUserSelectedListener {
 
     private static final String TAG = "UsersListActivity";
-    private static final int MAX_ITEMS = 30;
-    private static final int SEARCH_DELAY_MILLIS = 1000;
+    private static final int SEARCH_DELAY_MILLIS = 600;
 
     private Handler liveSearchHandler = new Handler();
     private LiveSearchRunnable liveSearchRunnable;
     private Call<UsersResponse> call;
     private List<User> users = new ArrayList<>();
     private UsersAdapter adapter;
+
+    // Need these values for future API calls
+    private int page = 0;
+    private String query;
 
 
     @Override
@@ -58,6 +57,9 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
 
         this.adapter = new UsersAdapter(this.users);
         recyclerView.setAdapter(adapter);
+
+        // Load more items when scroll reach the bottom
+        recyclerView.addOnScrollListener(new PaginationScrollListener());
     }
 
     @Override
@@ -95,13 +97,26 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
         return super.onPrepareOptionsMenu(menu);
     }
 
+    // API call with new value of query
     public void requestUsers(String query) {
         if(this.call != null)
             this.call.cancel();
-        int page = 0;
+        this.page = 0;
+        this.query = query;
         this.clearUsers();
         this.call = NetworkManager.getInstance().getService().searchUsers(query, page);
-        this.call.enqueue(new UsersNetworkListener(query,page));
+        this.call.enqueue(new UsersNetworkListener());
+        this.setLoading(true);
+    }
+
+    // API call with different page
+    public void requestMoreUsers() {
+        if(isLoading())
+            return;
+        this.setLoading(true);
+        this.page++;
+        this.call = NetworkManager.getInstance().getService().searchUsers(query, page);
+        this.call.enqueue(new UsersNetworkListener());
     }
 
     public void clearUsers(){
@@ -114,6 +129,25 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
         this.adapter.notifyItemRangeInserted(this.users.size() - users.size(), users.size());
     }
 
+    public boolean isLoading() {
+        return !this.users.isEmpty() && this.users.get(this.users.size() - 1) == null;
+    }
+
+    // Update adapter to show progressview or not
+    public void setLoading(boolean loading) {
+        boolean oldValue = this.isLoading();
+        if(oldValue == loading)
+            return;
+        if(oldValue) {
+            int lastIndex = this.users.size() - 1;
+            this.users.remove(lastIndex);
+            this.adapter.notifyItemRemoved(lastIndex);
+        }else {
+            this.users.add(null);
+            this.adapter.notifyItemInserted(this.users.size() - 1);
+        }
+    }
+
     @Override
     public void onUserSelected(User user) {
         Intent intent = new Intent();
@@ -122,6 +156,7 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
         finish();
     }
 
+    // API request are delayed due to quota limitations and avoiding useless network operation while query typing
     private class UsersQueryTextListener implements SearchView.OnQueryTextListener{
 
         @Override
@@ -136,9 +171,9 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
         public boolean onQueryTextChange(final String query) {
             Log.i(TAG, query);
             UsersListActivity.this.clearUsers();
+            liveSearchHandler.removeCallbacks(liveSearchRunnable);
             if(TextUtils.isEmpty(query))
                 return true;
-            liveSearchHandler.removeCallbacks(liveSearchRunnable);
             liveSearchRunnable = new LiveSearchRunnable(query);
             liveSearchHandler.postDelayed(liveSearchRunnable, SEARCH_DELAY_MILLIS);
             return true;
@@ -147,16 +182,9 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
 
     private class UsersNetworkListener implements Callback<UsersResponse>{
 
-        private String query;
-        private int page;
-
-        private UsersNetworkListener(String query, int page) {
-            this.query = query;
-            this.page = page;
-        }
-
         @Override
         public void onResponse(@NonNull Call<UsersResponse> call, @NonNull Response<UsersResponse> response) {
+            UsersListActivity.this.setLoading(false);
             if(!response.isSuccessful()) {
                 Log.e(TAG, "Bad Response");
                 return;
@@ -166,14 +194,11 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
                 return;
             List<User> result = body.getItems();
             UsersListActivity.this.addUsers(result);
-            if(users.size() < MAX_ITEMS && users.size() < body.getTotalCount()) {
-                UsersListActivity.this.call = NetworkManager.getInstance().getService().searchUsers(query, ++page);
-                UsersListActivity.this.call.enqueue(this);
-            }
         }
 
         @Override
         public void onFailure(@NonNull Call<UsersResponse> call, @NonNull Throwable t) {
+            UsersListActivity.this.setLoading(false);
             Log.e(TAG, t.getLocalizedMessage());
         }
     }
@@ -192,5 +217,33 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
         }
     }
 
+    private class PaginationScrollListener extends RecyclerView.OnScrollListener{
+
+        @Override
+        public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+            super.onScrollStateChanged(recyclerView, newState);
+        }
+
+        @Override
+        public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+            super.onScrolled(recyclerView, dx, dy);
+            LinearLayoutManager lm = (LinearLayoutManager) recyclerView.getLayoutManager();
+            if(lm == null)
+                return;
+            int visibleItemCount = lm.getChildCount();
+            int totalItemCount = lm.getItemCount();
+            int firstVisibleItemPosition= lm.findFirstVisibleItemPosition();
+
+            if ( (visibleItemCount + firstVisibleItemPosition) >= totalItemCount && firstVisibleItemPosition >= 0) {
+                recyclerView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        requestMoreUsers();
+                    }
+                });
+            }
+        }
+
+    }
 
 }
