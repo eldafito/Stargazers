@@ -1,10 +1,13 @@
 package com.gianessi.stargazers.models;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.SerializedName;
 
-public class User {
+public class User implements Parcelable {
 
-    public static final String USERNAME = "username";
+    public static final String ENTITY = "user";
 
     @SerializedName("login")
     private String username;
@@ -27,4 +30,35 @@ public class User {
         this.avatarUrl = avatarUrl;
     }
 
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.username);
+        dest.writeString(this.avatarUrl);
+    }
+
+    public User() {
+    }
+
+    protected User(Parcel in) {
+        this.username = in.readString();
+        this.avatarUrl = in.readString();
+    }
+
+    public static final Parcelable.Creator<User> CREATOR = new Parcelable.Creator<User>() {
+        @Override
+        public User createFromParcel(Parcel source) {
+            return new User(source);
+        }
+
+        @Override
+        public User[] newArray(int size) {
+            return new User[size];
+        }
+    };
 }

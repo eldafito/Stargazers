@@ -151,7 +151,7 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
     @Override
     public void onUserSelected(User user) {
         Intent intent = new Intent();
-        intent.putExtra(User.USERNAME, user.getUsername());
+        intent.putExtra(User.ENTITY, user);
         setResult(Activity.RESULT_OK, intent);
         finish();
     }

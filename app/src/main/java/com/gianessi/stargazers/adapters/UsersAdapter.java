@@ -77,18 +77,18 @@ public class UsersAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         return this.users.size();
     }
 
-    private static class UserViewHolder extends RecyclerView.ViewHolder {
+    public static class UserViewHolder extends RecyclerView.ViewHolder {
 
         private TextView usernameTxt;
         private ImageView avatarImg;
 
-        private UserViewHolder(View view) {
+        public UserViewHolder(View view) {
             super(view);
             usernameTxt = view.findViewById(R.id.user_username_txt);
             avatarImg = view.findViewById(R.id.user_avatar_img);
         }
 
-        private void bind(User user){
+        public void bind(User user){
             Glide.with(this.itemView.getContext()).load(user.getAvatarUrl()).apply(RequestOptions.circleCropTransform()).into(avatarImg);
             this.usernameTxt.setText(user.getUsername());
         }

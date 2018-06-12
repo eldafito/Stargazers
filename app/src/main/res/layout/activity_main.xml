@@ -6,26 +6,33 @@
     android:layout_height="match_parent"
     tools:context=".activities.MainActivity">
 
-    <EditText
-        android:id="@+id/main_user_edit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:focusableInTouchMode="false"
-        android:hint="@string/user"
-        app:layout_constraintBottom_toTopOf="@+id/button"
+    <include layout="@layout/item_user"
+        android:id="@+id/main_user"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/item_user_height"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:focusableInTouchMode="false"
+        android:hint="@string/user"/>
+
+    <Spinner
+        android:id="@+id/main_repo_spinner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="@+id/main_user"
+        app:layout_constraintStart_toStartOf="@+id/main_user"
+        app:layout_constraintTop_toBottomOf="@id/main_user" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/main_submit_btn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
-
 
 </android.support.constraint.ConstraintLayout>
