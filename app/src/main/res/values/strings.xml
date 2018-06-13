@@ -2,4 +2,9 @@
     <string name="app_name">Stargazers</string>
     <string name="search_user">Search user</string>
     <string name="user">User</string>
+    <string name="no_user_hint">Select a user</string>
+    <string name="submit">Discover Stargazers</string>
+    <string name="avatar_desc">Avatar Image</string>
+    <string name="logo_desc">GitHub logo Image</string>
+    <string name="repo">Repo</string>
 </resources>

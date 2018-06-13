@@ -4,6 +4,8 @@ import com.google.gson.annotations.SerializedName;
 
 public class Repo {
 
+    public static final String NAME = "reponame";
+
     @SerializedName("id")
     private long id;
     @SerializedName("name")

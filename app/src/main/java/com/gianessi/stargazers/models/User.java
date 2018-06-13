@@ -8,6 +8,8 @@ import com.google.gson.annotations.SerializedName;
 public class User implements Parcelable {
 
     public static final String ENTITY = "user";
+    public static final String USERNAME = "username";
+
 
     @SerializedName("login")
     private String username;

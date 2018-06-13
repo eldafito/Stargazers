@@ -2,7 +2,6 @@ package com.gianessi.stargazers.adapters;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -67,8 +66,6 @@ public class UsersAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                         listener.onUserSelected(user);
                 }
             });
-        }else{
-            Log.i("REC","top");
         }
     }
 
@@ -77,18 +74,18 @@ public class UsersAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         return this.users.size();
     }
 
-    public static class UserViewHolder extends RecyclerView.ViewHolder {
+    private static class UserViewHolder extends RecyclerView.ViewHolder {
 
         private TextView usernameTxt;
         private ImageView avatarImg;
 
-        public UserViewHolder(View view) {
+        private UserViewHolder(View view) {
             super(view);
             usernameTxt = view.findViewById(R.id.user_username_txt);
             avatarImg = view.findViewById(R.id.user_avatar_img);
         }
 
-        public void bind(User user){
+        private void bind(User user){
             Glide.with(this.itemView.getContext()).load(user.getAvatarUrl()).apply(RequestOptions.circleCropTransform()).into(avatarImg);
             this.usernameTxt.setText(user.getUsername());
         }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.gianessi.stargazers">
+
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -10,15 +11,23 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activities.MainActivity">
+        <activity
+            android:name=".activities.MainActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activities.UsersListActivity"
-            android:parentActivityName=".activities.MainActivity"
+        <activity
+            android:name=".activities.UsersListActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:parentActivityName=".activities.MainActivity" />
+        <activity android:name=".activities.StargazersListActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:parentActivityName=".activities.MainActivity"
             />
     </application>
 
