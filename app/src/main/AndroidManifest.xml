@@ -23,9 +23,11 @@
         </activity>
         <activity
             android:name=".activities.UsersListActivity"
+            android:label="@string/users_list"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".activities.MainActivity" />
         <activity android:name=".activities.StargazersListActivity"
+            android:label="@string/stargazers_list"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".activities.MainActivity"
             />

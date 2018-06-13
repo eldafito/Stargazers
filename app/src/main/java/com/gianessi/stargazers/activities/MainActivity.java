@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -27,7 +28,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     private static final String TAG = "MainActivity";
 
@@ -37,6 +38,10 @@ public class MainActivity extends AppCompatActivity {
     private Repo repo;
     private List<Repo> userRepos = new ArrayList<>();
     private ReposAdapter adapter;
+
+    // Need these values for future API calls
+    // GitHub API requests start from page 1 (page will be incremented at the first call)
+    private Integer page = NetworkManager.FIRST_PAGE_INDEX - 1;
 
     private TextView usernameTxt;
     private ImageView avatarImg;
@@ -63,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         Spinner repoSpinner = findViewById(R.id.main_repo_spinner);
         adapter = new ReposAdapter(this, userRepos);
         repoSpinner.setAdapter(adapter);
+        repoSpinner.setOnItemSelectedListener(this);
 
         this.setUser(null);
     }
@@ -77,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         if(user != null) {
             this.usernameTxt.setText(user.getUsername());
             Glide.with(this).load(user.getAvatarUrl()).apply(RequestOptions.circleCropTransform()).into(avatarImg);
-            this.requestUserRepos();
+            this.requestMoreUserRepos();
         }else{
             this.usernameTxt.setText(R.string.no_user_hint);
             this.avatarImg.setImageResource(R.drawable.avatar_placeholder);
@@ -85,19 +91,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void clearUserRepos(){
+        this.page = 0;
         this.userRepos.clear();
         this.adapter.notifyDataSetChanged();
         this.setRepo(null);
     }
 
-    public void setUserRepos(List<Repo> userRepos) {
-        this.userRepos.clear();
+    public void addUserRepos(List<Repo> userRepos) {
         this.userRepos.addAll(userRepos);
         this.adapter.notifyDataSetChanged();
-        if(userRepos.isEmpty())
-            this.setRepo(null);
-        else
-            this.setRepo(userRepos.get(0));
     }
 
     public void setRepo(Repo repo) {
@@ -105,11 +107,12 @@ public class MainActivity extends AppCompatActivity {
         this.submitBtn.setEnabled(repo != null);
     }
 
-    private void requestUserRepos(){
-        if(this.user == null)
+    private void requestMoreUserRepos(){
+        if(this.page == null || this.user == null)
             return;
+        this.page ++;
         this.setLoading(true);
-        NetworkManager.getInstance().getService().listRepos(user.getUsername()).enqueue(new UserReposNetworkListener());
+        NetworkManager.getInstance().getService().listRepos(user.getUsername(), page).enqueue(new UserReposNetworkListener());
     }
 
     private void chooseUser(){
@@ -135,6 +138,17 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    @Override
+    public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+        this.setRepo(this.userRepos.get(position));
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parentView) {
+        this.setRepo(null);
+    }
+
+
     private class UserReposNetworkListener implements Callback<List<Repo>> {
 
         @Override
@@ -145,9 +159,12 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             List<Repo> body = response.body();
-            if( body == null)
-                return;
-            MainActivity.this.setUserRepos(body);
+            if(body == null || body.isEmpty())
+                MainActivity.this.page = null;
+            else {
+                MainActivity.this.addUserRepos(body);
+                MainActivity.this.requestMoreUserRepos();
+            }
         }
 
         @Override

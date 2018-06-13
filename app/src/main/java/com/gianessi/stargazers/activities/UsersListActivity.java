@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.SearchView;
 
 import com.gianessi.stargazers.R;
@@ -42,15 +43,17 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
     private UsersAdapter adapter;
 
     // Need these values for future API calls
-    private int page = 0;
+    private Integer page = null;
     private String query;
 
+    private View emptyPlaceholder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_users_list);
         RecyclerView recyclerView = findViewById(R.id.users_list_recycler);
+        this.emptyPlaceholder = findViewById(R.id.users_empty_placeholder);
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -98,10 +101,11 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
     }
 
     // API call with new value of query
+    // GitHub API requests start from page 1
     public void requestUsers(String query) {
         if(this.call != null)
             this.call.cancel();
-        this.page = 0;
+        this.page = NetworkManager.FIRST_PAGE_INDEX;
         this.query = query;
         this.clearUsers();
         this.call = NetworkManager.getInstance().getService().searchUsers(query, page);
@@ -111,7 +115,8 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
 
     // API call with different page
     public void requestMoreUsers() {
-        if(isLoading())
+        // page will be null if end of list reached
+        if(this.page == null || isLoading())
             return;
         this.setLoading(true);
         this.page++;
@@ -127,6 +132,10 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
     public void addUsers(List<User> users) {
         this.users.addAll(users);
         this.adapter.notifyItemRangeInserted(this.users.size() - users.size(), users.size());
+    }
+
+    private void checkNoData(){
+        this.emptyPlaceholder.setVisibility(this.users.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     public boolean isLoading() {
@@ -190,10 +199,14 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
                 return;
             }
             UsersResponse body = response.body();
-            if( body == null)
+            if(body == null)
                 return;
             List<User> result = body.getItems();
-            UsersListActivity.this.addUsers(result);
+            if(result == null || result.isEmpty())
+                UsersListActivity.this.page = null;
+            else
+                UsersListActivity.this.addUsers(result);
+            checkNoData();
         }
 
         @Override

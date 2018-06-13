@@ -5,6 +5,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class NetworkManager {
 
+    public static final int FIRST_PAGE_INDEX = 1;
+
     private static final NetworkManager ourInstance = new NetworkManager();
 
     public static NetworkManager getInstance() {
@@ -12,7 +14,6 @@ public class NetworkManager {
     }
 
     private GitHubService service;
-
 
     private NetworkManager() {
         Retrofit retrofit = new Retrofit.Builder()

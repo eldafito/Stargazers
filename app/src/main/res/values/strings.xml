@@ -7,4 +7,7 @@
     <string name="avatar_desc">Avatar Image</string>
     <string name="logo_desc">GitHub logo Image</string>
     <string name="repo">Repo</string>
+    <string name="stargazers_list">Stargazers</string>
+    <string name="users_list">Users</string>
+    <string name="empty_list_placeholder">OPSSS! No data found</string>
 </resources>
