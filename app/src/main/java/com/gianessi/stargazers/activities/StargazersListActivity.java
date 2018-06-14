@@ -57,9 +57,14 @@ public class StargazersListActivity extends AppCompatActivity {
         Intent intent = getIntent();
         if (intent != null) {
             this.username = intent.getStringExtra(User.USERNAME);
-            this.repoName = intent.getStringExtra(Repo.NAME);
+            this.setRepoName(intent.getStringExtra(Repo.NAME));
             this.requestMoreStargazers();
         }
+    }
+
+    private void setRepoName(String repoName){
+        this.repoName = repoName;
+        this.setTitle(repoName);
     }
 
     private void requestMoreStargazers() {
