@@ -1,4 +1,4 @@
-﻿# Github Stargazers
+# Github Stargazers
 
 ## Approach
 For this project I decided to use an incremental approach as it fits well with the step specifications of the delivery.
