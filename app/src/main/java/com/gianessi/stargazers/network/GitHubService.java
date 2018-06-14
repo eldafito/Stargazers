@@ -11,10 +11,10 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-public interface GitHubService {
+interface GitHubService {
 
     @GET("search/users")
-    Call<UsersResponse> searchUsers(@Query("q") String query, @Query("page") int page);
+    Call<UsersResponse> searchUsers(@Query(value = "q", encoded = true) String query, @Query("page") int page);
 
     @GET("users/{user}/repos")
     Call<List<Repo>> listRepos(@Path("user") String username, @Query("page") int page);

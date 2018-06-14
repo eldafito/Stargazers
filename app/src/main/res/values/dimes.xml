@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="item_user_height">96dp</dimen>
+    <dimen name="no_data_placeholder_height">144dp</dimen>
 </resources>

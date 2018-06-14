@@ -10,11 +10,10 @@
 
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:adjustViewBounds="true"
+        android:layout_height="@dimen/no_data_placeholder_height"
+        android:contentDescription="@string/logo_desc"
         android:src="@drawable/github_logo"
-        android:tint="@android:color/darker_gray"
-        />
+        android:tint="@android:color/darker_gray" />
 
     <TextView
         android:layout_width="match_parent"

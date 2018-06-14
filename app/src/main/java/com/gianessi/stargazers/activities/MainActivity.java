@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private User user;
     private Repo repo;
-    private List<Repo> userRepos = new ArrayList<>();
+    private final List<Repo> userRepos = new ArrayList<>();
     private ReposAdapter adapter;
 
     // Need these values for future API calls
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         this.progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
     }
 
-    public void setUser(User user) {
+    private void setUser(User user) {
         this.user = user;
         this.clearUserRepos();
         if(user != null) {
@@ -90,19 +90,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
-    public void clearUserRepos(){
-        this.page = 0;
+    private void clearUserRepos(){
+        this.page = NetworkManager.FIRST_PAGE_INDEX - 1;
         this.userRepos.clear();
         this.adapter.notifyDataSetChanged();
         this.setRepo(null);
     }
 
-    public void addUserRepos(List<Repo> userRepos) {
+    private void addUserRepos(List<Repo> userRepos) {
         this.userRepos.addAll(userRepos);
         this.adapter.notifyDataSetChanged();
     }
 
-    public void setRepo(Repo repo) {
+    private void setRepo(Repo repo) {
         this.repo = repo;
         this.submitBtn.setEnabled(repo != null);
     }
@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             return;
         this.page ++;
         this.setLoading(true);
-        NetworkManager.getInstance().getService().listRepos(user.getUsername(), page).enqueue(new UserReposNetworkListener());
+        NetworkManager.getInstance().listRepos(user.getUsername(), page).enqueue(new UserReposNetworkListener());
     }
 
     private void chooseUser(){
@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         @Override
         public void onFailure(@NonNull Call<List<Repo>> call, @NonNull Throwable t) {
-            setLoading(false);
+            MainActivity.this.setLoading(false);
             Log.e(TAG, t.getLocalizedMessage());
         }
     }

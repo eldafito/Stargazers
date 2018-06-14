@@ -39,7 +39,7 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
     private Handler liveSearchHandler = new Handler();
     private LiveSearchRunnable liveSearchRunnable;
     private Call<UsersResponse> call;
-    private List<User> users = new ArrayList<>();
+    private final List<User> users = new ArrayList<>();
     private UsersAdapter adapter;
 
     // Need these values for future API calls
@@ -102,34 +102,32 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
 
     // API call with new value of query
     // GitHub API requests start from page 1
-    public void requestUsers(String query) {
+    private void requestUsers(String query) {
         if(this.call != null)
             this.call.cancel();
-        this.page = NetworkManager.FIRST_PAGE_INDEX;
+        this.page = NetworkManager.FIRST_PAGE_INDEX -1;
         this.query = query;
         this.clearUsers();
-        this.call = NetworkManager.getInstance().getService().searchUsers(query, page);
-        this.call.enqueue(new UsersNetworkListener());
-        this.setLoading(true);
+        this.requestMoreUsers();
     }
 
     // API call with different page
-    public void requestMoreUsers() {
+    private void requestMoreUsers() {
         // page will be null if end of list reached
         if(this.page == null || isLoading())
             return;
         this.setLoading(true);
         this.page++;
-        this.call = NetworkManager.getInstance().getService().searchUsers(query, page);
+        this.call = NetworkManager.getInstance().searchUsers(query, page);
         this.call.enqueue(new UsersNetworkListener());
     }
 
-    public void clearUsers(){
+    private void clearUsers(){
         this.users.clear();
         this.adapter.notifyDataSetChanged();
     }
 
-    public void addUsers(List<User> users) {
+    private void addUsers(List<User> users) {
         this.users.addAll(users);
         this.adapter.notifyItemRangeInserted(this.users.size() - users.size(), users.size());
     }
@@ -138,12 +136,12 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
         this.emptyPlaceholder.setVisibility(this.users.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
-    public boolean isLoading() {
+    private boolean isLoading() {
         return !this.users.isEmpty() && this.users.get(this.users.size() - 1) == null;
     }
 
     // Update adapter to show progressview or not
-    public void setLoading(boolean loading) {
+    private void setLoading(boolean loading) {
         boolean oldValue = this.isLoading();
         if(oldValue == loading)
             return;
@@ -206,7 +204,7 @@ public class UsersListActivity extends AppCompatActivity implements OnUserSelect
                 UsersListActivity.this.page = null;
             else
                 UsersListActivity.this.addUsers(result);
-            checkNoData();
+            UsersListActivity.this.checkNoData();
         }
 
         @Override

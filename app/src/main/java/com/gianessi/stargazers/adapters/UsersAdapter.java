@@ -21,7 +21,7 @@ public class UsersAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     private static final int VIEW_TYPE_ITEM = 0;
     private static final int VIEW_TYPE_PROGRESS = 1;
 
-    private List<User> users;
+    private final List<User> users;
     private OnUserSelectedListener listener;
 
     public UsersAdapter(List<User> users) {

@@ -26,7 +26,7 @@ public class StargazersListActivity extends AppCompatActivity {
 
     private static final String TAG = "StargazersListActivity";
 
-    private List<User> stargazers = new ArrayList<>();
+    private final List<User> stargazers = new ArrayList<>();
     private UsersAdapter adapter;
 
     // Need these values for future API calls
@@ -56,9 +56,9 @@ public class StargazersListActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         if (intent != null) {
-            username = intent.getStringExtra(User.USERNAME);
-            repoName = intent.getStringExtra(Repo.NAME);
-            requestMoreStargazers();
+            this.username = intent.getStringExtra(User.USERNAME);
+            this.repoName = intent.getStringExtra(Repo.NAME);
+            this.requestMoreStargazers();
         }
     }
 
@@ -68,7 +68,7 @@ public class StargazersListActivity extends AppCompatActivity {
             return;
         this.page++;
         this.setLoading(true);
-        NetworkManager.getInstance().getService().listStargazers(username, repoName, page).enqueue(new StargazersNetworkListener());
+        NetworkManager.getInstance().listStargazers(username, repoName, page).enqueue(new StargazersNetworkListener());
     }
 
     private void addStargazers(List<User> stargazers) {
