@@ -35,4 +35,4 @@ Depending on the context, the request for new data from the server is sent by th
 Standard Android Studio 3.1.3 project.
 Sync with gradle 4.4, build, run and enjoy :)
 
-Demo video of Stargazers app can be found on root directory. 
+Demo video of Stargazers app can be found on root directory.
