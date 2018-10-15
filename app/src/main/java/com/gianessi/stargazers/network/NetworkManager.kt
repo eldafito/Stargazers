@@ -14,7 +14,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 private const val BASE_URL = "https://api.github.com/"
 
-class NetworkManager {
+class NetworkManager private constructor(){
 
     private val service: GitHubService
 

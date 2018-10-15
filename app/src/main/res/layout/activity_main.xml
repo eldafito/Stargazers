@@ -71,7 +71,6 @@
         android:enabled="false"
         android:text="@string/submit"
         android:textColor="@android:color/white"
-        android:onClick="discoverStargazers"
         />
 
     <android.support.constraint.Guideline

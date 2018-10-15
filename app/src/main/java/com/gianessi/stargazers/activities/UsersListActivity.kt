@@ -3,15 +3,11 @@ package com.gianessi.stargazers.activities
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.text.TextUtils
 import android.util.Log
 import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.widget.SearchView
 
@@ -21,8 +17,10 @@ import com.gianessi.stargazers.listeners.OnUserSelectedListener
 import com.gianessi.stargazers.models.User
 import com.gianessi.stargazers.models.UsersResponse
 import com.gianessi.stargazers.network.NetworkManager
+import kotlinx.android.synthetic.main.activity_users_list.*
+import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.android.UI
 
-import java.util.ArrayList
 
 import retrofit2.Call
 import retrofit2.Callback
@@ -33,21 +31,23 @@ private const val SEARCH_DELAY_MILLIS = 600
 
 class UsersListActivity : AppCompatActivity(), OnUserSelectedListener {
 
-    private val liveSearchHandler = Handler()
-    private var liveSearchRunnable: LiveSearchRunnable? = null
     private var call: Call<UsersResponse>? = null
-    private val users = ArrayList<User>()
-    private var adapter: UsersAdapter? = null
+    private val users = mutableListOf<User?>()
+    private lateinit var adapter: UsersAdapter
 
     // Need these values for future API calls
     private var page: Int? = null
     private var query: String? = null
+    private var searchJob: Job? = null
+    set(value) {
+        searchJob?.cancel()
+        field = value
+    }
 
-    private var emptyPlaceholder: View? = null
 
     // Update adapter to show progressview or not
     private var isLoading: Boolean
-        get() = !this.users.isEmpty() && this.users[this.users.size - 1] == null
+        get() = !this.users.isEmpty()
         set(loading) {
             val oldValue = this.isLoading
             if (oldValue == loading)
@@ -55,36 +55,34 @@ class UsersListActivity : AppCompatActivity(), OnUserSelectedListener {
             if (oldValue) {
                 val lastIndex = this.users.size - 1
                 this.users.removeAt(lastIndex)
-                this.adapter!!.notifyItemRemoved(lastIndex)
+                this.adapter.notifyItemRemoved(lastIndex)
             } else {
                 this.users.add(null)
-                this.adapter!!.notifyItemInserted(this.users.size - 1)
+                this.adapter.notifyItemInserted(this.users.size - 1)
             }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_users_list)
-        val recyclerView = findViewById<RecyclerView>(R.id.users_list_recycler)
-        this.emptyPlaceholder = findViewById(R.id.users_empty_placeholder)
 
-        recyclerView.setHasFixedSize(true)
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        users_list_recycler.setHasFixedSize(true)
+        users_list_recycler.layoutManager = LinearLayoutManager(this)
 
         this.adapter = UsersAdapter(this.users)
-        recyclerView.adapter = adapter
+        users_list_recycler.adapter = adapter
 
         // Load more items when scroll reach the bottom
-        recyclerView.addOnScrollListener(PaginationScrollListener())
+        users_list_recycler.addOnScrollListener(PaginationScrollListener())
     }
 
     override fun onStart() {
         super.onStart()
-        this.adapter?.listener = this
+        this.adapter.listener = this
     }
 
     override fun onStop() {
-        this.adapter?.listener = null
+        this.adapter.listener = null
         super.onStop()
     }
 
@@ -93,7 +91,19 @@ class UsersListActivity : AppCompatActivity(), OnUserSelectedListener {
         inflater.inflate(R.menu.users_list, menu)
 
         val searchView = menu.findItem(R.id.search).actionView as SearchView
-        searchView.setOnQueryTextListener(UsersQueryTextListener())
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+
+            override fun onQueryTextSubmit(query: String): Boolean {
+                search(query, true)
+                return true
+            }
+
+            override fun onQueryTextChange(query: String): Boolean {
+                Log.i(TAG, query)
+                search(query)
+                return true
+            }
+        })
         searchView.setIconifiedByDefault(false)
 
         return true
@@ -109,106 +119,76 @@ class UsersListActivity : AppCompatActivity(), OnUserSelectedListener {
         return super.onPrepareOptionsMenu(menu)
     }
 
-    // API call with new value of query
-    // GitHub API requests start from page 1
-    private fun requestUsers(query: String) {
-        if (this.call != null)
-            this.call!!.cancel()
-        this.page = NetworkManager.FIRST_PAGE_INDEX - 1
-        this.query = query
-        this.clearUsers()
-        this.requestMoreUsers()
-    }
 
     // API call with different page
     private fun requestMoreUsers() {
         // page will be null if end of list reached
-        if (this.page == null || isLoading)
+        if (isLoading)
             return
+        val page = this.page ?: return
+        val query = this.query ?: return
         this.isLoading = true
-        this.page++
-        this.call = NetworkManager.instance.searchUsers(query, page!!)
-        this.call!!.enqueue(UsersNetworkListener())
+        this.page = page + 1
+        this.call = NetworkManager.instance.searchUsers(query, page)
+        this.call!!.enqueue(object : Callback<UsersResponse> {
+            override fun onResponse(call: Call<UsersResponse>, response: Response<UsersResponse>) {
+                this@UsersListActivity.isLoading = false
+                if (!response.isSuccessful) {
+                    Log.e(TAG, "Bad Response")
+                    return
+                }
+                val body = response.body() ?: return
+                val result = body.items
+                if (result == null || result.isEmpty())
+                    this@UsersListActivity.page = null
+                else
+                    this@UsersListActivity.addUsers(result)
+                this@UsersListActivity.checkNoData()
+            }
+
+            override fun onFailure(call: Call<UsersResponse>, t: Throwable) {
+                this@UsersListActivity.isLoading = false
+                Log.e(TAG, t.localizedMessage)
+            }
+        })
     }
 
     private fun clearUsers() {
         this.users.clear()
-        this.adapter!!.notifyDataSetChanged()
+        this.adapter.notifyDataSetChanged()
     }
 
     private fun addUsers(users: List<User>) {
         this.users.addAll(users)
-        this.adapter!!.notifyItemRangeInserted(this.users.size - users.size, users.size)
+        this.adapter.notifyItemRangeInserted(this.users.size - users.size, users.size)
     }
 
     private fun checkNoData() {
-        this.emptyPlaceholder!!.visibility = if (this.users.isEmpty()) View.VISIBLE else View.GONE
+        users_empty_placeholder.visibility = if (this.users.isEmpty()) View.VISIBLE else View.GONE
     }
 
     override fun onUserSelected(user: User) {
-        val intent = Intent()
-        intent.putExtra(User.ENTITY, user)
-        setResult(Activity.RESULT_OK, intent)
+        Intent().apply {
+            putExtra(User.ENTITY, user)
+        }.also { i ->
+            setResult(Activity.RESULT_OK, i)
+        }
         finish()
     }
 
-    // API request are delayed due to quota limitations and avoiding useless network operation while query typing
-    private inner class UsersQueryTextListener : SearchView.OnQueryTextListener {
-
-        override fun onQueryTextSubmit(query: String): Boolean {
-            liveSearchHandler.removeCallbacks(liveSearchRunnable)
-            liveSearchRunnable = LiveSearchRunnable(query)
-            liveSearchHandler.post(liveSearchRunnable)
-            return true
-        }
-
-        override fun onQueryTextChange(query: String): Boolean {
-            Log.i(TAG, query)
-            this@UsersListActivity.clearUsers()
-            liveSearchHandler.removeCallbacks(liveSearchRunnable)
-            if (TextUtils.isEmpty(query))
-                return true
-            liveSearchRunnable = LiveSearchRunnable(query)
-            liveSearchHandler.postDelayed(liveSearchRunnable, SEARCH_DELAY_MILLIS.toLong())
-            return true
-        }
-    }
-
-    private inner class UsersNetworkListener : Callback<UsersResponse> {
-
-        override fun onResponse(call: Call<UsersResponse>, response: Response<UsersResponse>) {
-            this@UsersListActivity.isLoading = false
-            if (!response.isSuccessful) {
-                Log.e(TAG, "Bad Response")
-                return
-            }
-            val body = response.body() ?: return
-            val result = body.items
-            if (result == null || result.isEmpty())
-                this@UsersListActivity.page = null
-            else
-                this@UsersListActivity.addUsers(result)
-            this@UsersListActivity.checkNoData()
-        }
-
-        override fun onFailure(call: Call<UsersResponse>, t: Throwable) {
-            this@UsersListActivity.isLoading = false
-            Log.e(TAG, t.localizedMessage)
-        }
-    }
-
-    private inner class LiveSearchRunnable private constructor(private val query: String) : Runnable {
-
-        override fun run() {
-            this@UsersListActivity.requestUsers(query)
+    private fun search(query: String, force: Boolean = false){
+        this.searchJob = launch(CommonPool){
+            if(!query.isEmpty() && !force)
+                delay(SEARCH_DELAY_MILLIS)
+            call?.cancel()
+            page = NetworkManager.FIRST_PAGE_INDEX - 1
+            this@UsersListActivity.query = query
+            launch(UI) { clearUsers()  }
+            requestMoreUsers()
         }
     }
 
     private inner class PaginationScrollListener : RecyclerView.OnScrollListener() {
-
-        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-            super.onScrollStateChanged(recyclerView, newState)
-        }
 
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
