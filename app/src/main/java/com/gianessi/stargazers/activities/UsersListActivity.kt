@@ -3,9 +3,9 @@ package com.gianessi.stargazers.activities
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.view.Menu
 import android.view.View
@@ -67,7 +67,7 @@ class UsersListActivity : AppCompatActivity(), OnUserSelectedListener {
         setContentView(R.layout.activity_users_list)
 
         users_list_recycler.setHasFixedSize(true)
-        users_list_recycler.layoutManager = LinearLayoutManager(this)
+        users_list_recycler.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
 
         this.adapter = UsersAdapter(this.users)
         users_list_recycler.adapter = adapter
@@ -177,22 +177,22 @@ class UsersListActivity : AppCompatActivity(), OnUserSelectedListener {
     }
 
     private fun search(query: String, force: Boolean = false){
+        clearUsers()
         this.searchJob = launch(CommonPool){
             if(!query.isEmpty() && !force)
                 delay(SEARCH_DELAY_MILLIS)
             call?.cancel()
             page = NetworkManager.FIRST_PAGE_INDEX - 1
             this@UsersListActivity.query = query
-            launch(UI) { clearUsers()  }
             requestMoreUsers()
         }
     }
 
-    private inner class PaginationScrollListener : RecyclerView.OnScrollListener() {
+    private inner class PaginationScrollListener : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
 
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+        override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
-            val lm = recyclerView.layoutManager as LinearLayoutManager? ?: return
+            val lm = recyclerView.layoutManager as androidx.recyclerview.widget.LinearLayoutManager? ?: return
             val visibleItemCount = lm.childCount
             val totalItemCount = lm.itemCount
             val firstVisibleItemPosition = lm.findFirstVisibleItemPosition()

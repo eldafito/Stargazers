@@ -1,9 +1,9 @@
 package com.gianessi.stargazers.activities
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.view.View
 import com.gianessi.stargazers.R
@@ -56,7 +56,7 @@ class StargazersListActivity : AppCompatActivity() {
         setContentView(R.layout.activity_stargazers_list)
 
         stargazers_list_recycler.setHasFixedSize(true)
-        stargazers_list_recycler.layoutManager = LinearLayoutManager(this)
+        stargazers_list_recycler.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
 
         this.adapter = UsersAdapter(this.stargazers)
         stargazers_list_recycler.adapter = adapter
@@ -110,11 +110,11 @@ class StargazersListActivity : AppCompatActivity() {
         stargazers_empty_placeholder.visibility = if (this.stargazers.isEmpty()) View.VISIBLE else View.GONE
     }
 
-    private inner class PaginationScrollListener : RecyclerView.OnScrollListener() {
+    private inner class PaginationScrollListener : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
 
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+        override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
-            val lm = recyclerView.layoutManager as LinearLayoutManager? ?: return
+            val lm = recyclerView.layoutManager as androidx.recyclerview.widget.LinearLayoutManager? ?: return
             val visibleItemCount = lm.childCount
             val totalItemCount = lm.itemCount
             val firstVisibleItemPosition = lm.findFirstVisibleItemPosition()
