@@ -1,5 +1,12 @@
 # Github Stargazers
 
+## Changelog
+- Migrate to AndroidX
+- Project refactor from Java to Kotlin with some arrangement like the use of 
+couroutines
+- LargeTest for search UI
+
+
 ## Approach
 For this project I decided to use an incremental approach as it fits well with the step specifications of the delivery.
 
@@ -32,7 +39,7 @@ When the result of the call was successful but did not return any values, it mea
 Depending on the context, the request for new data from the server is sent by the user's scroll to the last element of the list or directly by the response of the previous call.
 
 ## Installation
-Standard Android Studio 3.1.3 project.
-Sync with gradle 4.4, build, run and enjoy :)
+Standard Android Studio 3.2.1 project.
+Sync with gradle 4.6, build, run and enjoy :)
 
 Demo video of Stargazers app can be found on root directory.
