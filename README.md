@@ -2,7 +2,7 @@
 
 ## Changelog
 - Migrate to AndroidX
-- Project refactor from Java to Kotlin with some arrangement like the use of 
+- Project refactor from Java to Kotlin with some improvements like the use of 
 couroutines
 - LargeTest for search UI
 
