@@ -46,10 +46,10 @@ class UsersListActivity : AppCompatActivity(), OnUserSelectedListener {
 
 
     // Update adapter to show progressview or not
-    private var isLoading: Boolean
-        get() = !this.users.isEmpty()
+    private var isLoading = false
         set(loading) {
             val oldValue = this.isLoading
+            field = loading
             if (oldValue == loading)
                 return
             if (oldValue) {

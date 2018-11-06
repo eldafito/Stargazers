@@ -35,10 +35,10 @@ class StargazersListActivity : AppCompatActivity() {
     }
 
     // Update adapter to show progressview or not
-    private var isLoading: Boolean
-        get() = !this.stargazers.isEmpty()
+    private var isLoading = false
         set(loading) {
             val oldValue = this.isLoading
+            field = loading
             if (oldValue == loading)
                 return
             if (oldValue) {
