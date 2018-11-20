@@ -53,9 +53,11 @@ class UsersListActivity : AppCompatActivity(), OnUserSelectedListener {
             if (oldValue == loading)
                 return
             if (oldValue) {
-                val lastIndex = this.users.size - 1
-                this.users.removeAt(lastIndex)
-                this.adapter.notifyItemRemoved(lastIndex)
+                val index = this.users.indexOf(null)
+                if (index >= 0) {
+                    this.users.removeAt(index)
+                    this.adapter.notifyItemRemoved(index)
+                }
             } else {
                 this.users.add(null)
                 this.adapter.notifyItemInserted(this.users.size - 1)
